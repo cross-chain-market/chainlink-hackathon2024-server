@@ -1,0 +1,15 @@
+profile:
+  port: 8081
+  flag: local-dev
+logger:
+  debug: true
+  pretty: true
+  addSource: true
+postgres:
+  address: localhost:5432
+  database: marketplace
+  username: postgres
+  password: postgres
+  insecure: true
+  queryHook: false
+  readTimeout: 60s
