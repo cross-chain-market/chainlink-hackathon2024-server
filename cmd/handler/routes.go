@@ -54,17 +54,21 @@ type (
 		Name          string       `json:"name" validate:"notblank"`
 		Description   string       `json:"description"`
 		BaseImagePath string       `json:"base_image_path"`
+		ImageID       string       `json:"image_id"`
+		Address       string       `json:"address"`
+		NetworkID     string       `json:"network_id"`
+		ChainID       string       `json:"chain_id"`
 		Items         []itemsInput `json:"items"`
 	}
 
 	itemsInput struct {
-		Name          string  `json:"name" validate:"notblank"`
-		Description   string  `json:"description"`
-		BaseImagePath string  `json:"base_image_path"`
-		FiatPrice     float64 `json:"fiat_price"`
-		Address       string  `json:"address"`
-		TotalAmount   int64   `json:"total_amount"`
-		ListedAmount  int64   `json:"listed_amount"`
+		Name         string         `json:"name" validate:"notblank"`
+		Description  string         `json:"description"`
+		ImageID      string         `json:"image_id"`
+		FiatPrice    float64        `json:"fiat_price"`
+		TotalAmount  int64          `json:"total_amount"`
+		ListedAmount int64          `json:"listed_amount"`
+		Attributes   map[string]any `json:"attributes"`
 	}
 )
 

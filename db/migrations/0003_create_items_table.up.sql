@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS items (
     collection_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    base_image_path TEXT,
+    image_id TEXT,
     fiat_price DECIMAL,
-    address TEXT,
     total_amount BIGINT,
     listed_amount BIGINT,
+    attributes JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ,
 

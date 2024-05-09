@@ -34,15 +34,16 @@ func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Req
 
 	for _, item := range request.Body.Items {
 		items = append(items, &model.Item{
-			ID:            uuid.New(),
-			CollectionID:  collectionID,
-			Name:          item.Name,
-			Description:   item.Description,
-			BaseImagePath: item.BaseImagePath,
-			FiatPrice:     item.FiatPrice,
-			Address:       item.Address,
-			TotalAmount:   item.TotalAmount,
-			ListedAmount:  item.ListedAmount,
+			ID:           uuid.New(),
+			CollectionID: collectionID,
+			Name:         item.Name,
+			Description:  item.Description,
+			ImageID:      item.ImageID,
+			FiatPrice:    item.FiatPrice,
+			TotalAmount:  item.TotalAmount,
+			ListedAmount: item.ListedAmount,
+			Attributes:   item.Attributes,
+			CreatedAt:    time.Now().UTC(),
 		})
 	}
 
@@ -52,7 +53,13 @@ func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Req
 		Name:          request.Body.Name,
 		Description:   request.Body.Description,
 		BaseImagePath: request.Body.BaseImagePath,
+		ImageID:       request.Body.ImageID,
+		Address:       request.Body.Address,
+		NetworkID:     request.Body.NetworkID,
+		ChainID:       request.Body.ChainID,
 		Items:         items,
+		CreatedAt:     time.Now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
 	}
 
 	result, err := h.service.CreateCollection(r.Context(), collection)
