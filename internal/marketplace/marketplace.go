@@ -14,6 +14,17 @@ func NewService(repo *PostgresRepository) *Service {
 	return &Service{repo: repo}
 }
 
+func (s *Service) CreateCollection(ctx context.Context, collection *model.Collection) (*model.Collection, error) {
+	collection, err := s.repo.createCollection(ctx, collection)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Integrate with Smart Contract
+
+	return collection, nil
+}
+
 func (s *Service) RegisterUser(ctx context.Context, user *model.User) (*model.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {

@@ -21,6 +21,30 @@ func NewPostgresRepository(db *bun.DB) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 
+func (r *PostgresRepository) createCollection(ctx context.Context, collection *model.Collection) (*model.Collection, error) {
+	if err := r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		if _, err := tx.NewInsert().Model(collection).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to insert collection: %w", err)
+		}
+
+		if _, err := tx.NewInsert().Model(&collection.Items).Exec(ctx); err != nil {
+			return fmt.Errorf("failed to insert items: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		var pgErr pgdriver.Error
+		ok := errors.As(err, &pgErr)
+
+		if ok && pgErr.IntegrityViolation() && isUniqueViolation(pgErr) {
+			return nil, errs.ErrDuplicatedEntity
+		}
+		return nil, fmt.Errorf("failed to run in transaction: %w", err)
+	}
+
+	return collection, nil
+}
+
 func (r *PostgresRepository) registerUser(ctx context.Context, user *model.User) (*model.User, error) {
 	if _, err := r.db.NewInsert().Model(user).Exec(ctx); err != nil {
 		var pgErr pgdriver.Error
