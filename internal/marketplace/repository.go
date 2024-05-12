@@ -27,6 +27,10 @@ func (r *PostgresRepository) createCollection(ctx context.Context, collection *m
 			return fmt.Errorf("failed to insert collection: %w", err)
 		}
 
+		for i := range collection.Items {
+			collection.Items[i].CollectionID = collection.ID
+		}
+
 		if _, err := tx.NewInsert().Model(&collection.Items).Exec(ctx); err != nil {
 			return fmt.Errorf("failed to insert items: %w", err)
 		}
@@ -43,6 +47,28 @@ func (r *PostgresRepository) createCollection(ctx context.Context, collection *m
 	}
 
 	return collection, nil
+}ç
+
+func (r *PostgresRepository) updateCollection(ctx context.Context, collection *model.Collection) error {
+	res, err := r.db.NewUpdate().Model(collection).
+		ExcludeColumn("created_at").
+		WherePK().
+		Returning("*").
+		Exec(ctx)
+	if err != nil{
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return errs.ErrEntityNotFound
+	}
+
+	return nil
 }
 
 func (r *PostgresRepository) registerUser(ctx context.Context, user *model.User) (*model.User, error) {

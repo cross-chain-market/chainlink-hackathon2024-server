@@ -51,24 +51,23 @@ type (
 	}
 
 	createCollectionInput struct {
-		Name          string       `json:"name" validate:"notblank"`
-		Description   string       `json:"description"`
-		BaseImagePath string       `json:"base_image_path"`
-		ImageID       string       `json:"image_id"`
-		Address       string       `json:"address"`
-		NetworkID     string       `json:"network_id"`
-		ChainID       string       `json:"chain_id"`
-		Items         []itemsInput `json:"items"`
+		Name                  string       `json:"name" validate:"notblank"`
+		Description           string       `json:"description"`
+		BaseImagePath         string       `json:"base_image_path"`
+		ImageID               string       `json:"image_id"`
+		MarketplaceAddressHex string       `json:"marketplace_address_hex"`
+		NetworkID             string       `json:"network_id"`
+		ChainID               int64        `json:"chain_id"`
+		Items                 []itemsInput `json:"items"`
 	}
 
 	itemsInput struct {
-		Name         string         `json:"name" validate:"notblank"`
-		Description  string         `json:"description"`
-		ImageID      string         `json:"image_id"`
-		FiatPrice    float64        `json:"fiat_price"`
-		TotalAmount  int64          `json:"total_amount"`
-		ListedAmount int64          `json:"listed_amount"`
-		Attributes   map[string]any `json:"attributes"`
+		Name        string         `json:"name" validate:"notblank"`
+		Description string         `json:"description"`
+		ImageID     string         `json:"image_id"`
+		FiatPrice   float64        `json:"fiat_price"`
+		TotalAmount int64          `json:"total_amount"`
+		Attributes  map[string]any `json:"attributes"`
 	}
 )
 

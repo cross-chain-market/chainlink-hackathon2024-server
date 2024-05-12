@@ -2,25 +2,38 @@ package marketplace
 
 import (
 	"context"
+	"fmt"
+	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace/blockchain"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace/model"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repo *PostgresRepository
+	repo      *PostgresRepository
+	ethClient *blockchain.ETHClient
 }
 
-func NewService(repo *PostgresRepository) *Service {
-	return &Service{repo: repo}
+func NewService(repo *PostgresRepository, ethClient *blockchain.ETHClient) *Service {
+	return &Service{repo: repo, ethClient: ethClient}
 }
 
-func (s *Service) CreateCollection(ctx context.Context, collection *model.Collection) (*model.Collection, error) {
+func (s *Service) CreateCollection(ctx context.Context, collection *model.Collection, chainID int64, marketplaceAccountHex string) (*model.Collection, error) {
 	collection, err := s.repo.createCollection(ctx, collection)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create db collection: %w", err)
 	}
 
-	// TODO: Integrate with Smart Contract
+	contractAddressHex, err := s.ethClient.CreateCollection(ctx, collection, chainID, marketplaceAccountHex)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create blockchain collection: %w", err)
+	}
+
+	collection.Status = model.PendingTXStatus
+	collection.Address = contractAddressHex
+
+	if err := s.repo.updateCollection(ctx, collection); err != nil {
+		return nil, fmt.Errorf("failed to update db collection: %w", err)
+	}
 
 	return collection, nil
 }

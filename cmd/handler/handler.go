@@ -28,41 +28,38 @@ func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Req
 		response.BadRequest(w, errors.New("no items provided"))
 	}
 
-	collectionID := uuid.New()
-
 	items := make([]*model.Item, 0, len(request.Body.Items))
 
 	for _, item := range request.Body.Items {
 		items = append(items, &model.Item{
-			ID:           uuid.New(),
-			CollectionID: collectionID,
 			Name:         item.Name,
 			Description:  item.Description,
 			ImageID:      item.ImageID,
 			FiatPrice:    item.FiatPrice,
 			TotalAmount:  item.TotalAmount,
-			ListedAmount: item.ListedAmount,
+			ListedAmount: 0,
 			Attributes:   item.Attributes,
 			CreatedAt:    time.Now().UTC(),
 		})
 	}
 
 	collection := &model.Collection{
-		ID:            collectionID,
 		UserID:        request.UserID,
 		Name:          request.Body.Name,
 		Description:   request.Body.Description,
 		BaseImagePath: request.Body.BaseImagePath,
 		ImageID:       request.Body.ImageID,
-		Address:       request.Body.Address,
 		NetworkID:     request.Body.NetworkID,
 		ChainID:       request.Body.ChainID,
+		Status:        model.NotDeployedStatus,
 		Items:         items,
 		CreatedAt:     time.Now().UTC(),
 		UpdatedAt:     time.Now().UTC(),
 	}
 
-	result, err := h.service.CreateCollection(r.Context(), collection)
+	// TODO: Do I need to deploy marketplace contract or will I receive the address?
+
+	result, err := h.service.CreateCollection(r.Context(), collection, request.Body.ChainID, request.Body.MarketplaceAddressHex)
 	if err != nil {
 		response.InternalServerError(w, err)
 		return
