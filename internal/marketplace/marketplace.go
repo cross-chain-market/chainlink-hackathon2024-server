@@ -38,6 +38,28 @@ func (s *Service) CreateCollection(ctx context.Context, collection *model.Collec
 	return collection, nil
 }
 
+func (s *Service) ListItem(ctx context.Context, collectionID, itemID, listedAmount int64, fiatPrice float64) (*model.Item, error) {
+	item, err := s.repo.listItem(ctx, collectionID, itemID, listedAmount, fiatPrice)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list items: %w", err)
+	}
+
+	return item, nil
+}
+
+func (s *Service) UnlistItem(ctx context.Context, collectionID, itemID, listedAmount int64) (*model.Item, error) {
+	item, err := s.repo.unlistItem(ctx, collectionID, itemID, listedAmount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unlist items: %w", err)
+	}
+
+	return item, nil
+}
+
+func (s *Service) GetListings(ctx context.Context, collectionID *int64) ([]*model.Item, error) {
+	return s.repo.getListings(ctx, collectionID)
+}
+
 func (s *Service) RegisterUser(ctx context.Context, user *model.User) (*model.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {

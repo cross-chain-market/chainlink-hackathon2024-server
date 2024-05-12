@@ -47,7 +47,7 @@ func (r *PostgresRepository) createCollection(ctx context.Context, collection *m
 	}
 
 	return collection, nil
-}ç
+}
 
 func (r *PostgresRepository) updateCollection(ctx context.Context, collection *model.Collection) error {
 	res, err := r.db.NewUpdate().Model(collection).
@@ -55,7 +55,7 @@ func (r *PostgresRepository) updateCollection(ctx context.Context, collection *m
 		WherePK().
 		Returning("*").
 		Exec(ctx)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -69,6 +69,110 @@ func (r *PostgresRepository) updateCollection(ctx context.Context, collection *m
 	}
 
 	return nil
+}
+
+func (r *PostgresRepository) listItem(ctx context.Context, collectionID, itemID, listedAmount int64, fiatPrice float64) (*model.Item, error) {
+	item := new(model.Item)
+
+	if err := r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		err := tx.NewSelect().
+			Model(item).
+			Where("id = ?", itemID).
+			Where("collection_id = ?", collectionID).
+			Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errs.ErrEntityNotFound
+			}
+
+			return fmt.Errorf("failed to get item: %w", err)
+		}
+
+		// if already listed amount + new listed amount > total available amount, then we fail
+		if item.ListedAmount+listedAmount > item.TotalAmount {
+			return errs.ErrListedAmountGreaterThanTotalAmount
+		}
+
+		// if there is some fiat price and the new fiat price is different than the existing one, we fail
+		// TODO: This is a valid case but I think we should leave this out of MVP for now since we would need to update blockchain
+		if item.FiatPrice != 0 && item.FiatPrice != fiatPrice {
+			return errs.ErrCannotUpdateFiatPrice
+		}
+
+		item.FiatPrice = fiatPrice
+		item.ListedAmount += listedAmount
+
+		_, err = tx.NewUpdate().Model(item).
+			ExcludeColumn("created_at").
+			WherePK().
+			Returning("*").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("failed to run in transaction: %w", err)
+	}
+
+	return item, nil
+}
+
+func (r *PostgresRepository) unlistItem(ctx context.Context, collectionID, itemID, listedAmount int64) (*model.Item, error) {
+	item := new(model.Item)
+
+	if err := r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		err := tx.NewSelect().
+			Model(item).
+			Where("id = ?", itemID).
+			Where("collection_id = ?", collectionID).
+			Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errs.ErrEntityNotFound
+			}
+
+			return fmt.Errorf("failed to get item: %w", err)
+		}
+
+		if listedAmount > item.ListedAmount {
+			return errs.ErrCannotUnlistGreaterAmountThanListedAmount
+		}
+
+		item.ListedAmount -= listedAmount
+
+		_, err = tx.NewUpdate().Model(item).
+			ExcludeColumn("created_at").
+			WherePK().
+			Returning("*").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("failed to run in transaction: %w", err)
+	}
+
+	return item, nil
+}
+
+func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int64) ([]*model.Item, error) {
+	var items []*model.Item
+
+	query := r.db.NewSelect().Model(&items).Where("listed_amount > 0")
+
+	if collectionID != nil {
+		query = query.Where("collection_id = ?", collectionID)
+	}
+
+	if err := query.Scan(ctx); err != nil {
+		return nil, fmt.Errorf("failed to fetch listings: %w", err)
+	}
+
+	return items, nil
 }
 
 func (r *PostgresRepository) registerUser(ctx context.Context, user *model.User) (*model.User, error) {

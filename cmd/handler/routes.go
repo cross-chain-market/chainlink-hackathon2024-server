@@ -39,6 +39,19 @@ type (
 		Body   createCollectionInput `in:"body=json"`
 	}
 
+	listItemsRequest struct {
+		UserID       uuid.UUID    `in:"path=userId"`
+		CollectionID int64        `in:"path=collectionId"`
+		ItemID       int64        `in:"path=itemId"`
+		Body         listingInput `in:"body=json"`
+	}
+
+	getListingsRequest struct {
+		CollectionID *int64 `in:"query=collectionId"`
+
+		// TODO: Add more optional filters like userID for example
+	}
+
 	registerUserInput struct {
 		Email    string `json:"email" validate:"notblank"`
 		Username string `json:"username" validate:"notblank"`
@@ -69,6 +82,11 @@ type (
 		TotalAmount int64          `json:"total_amount"`
 		Attributes  map[string]any `json:"attributes"`
 	}
+
+	listingInput struct {
+		FiatPrice    float64 `json:"fiat_price"`
+		ListedAmount int64   `json:"listed_amount"`
+	}
 )
 
 func InitRoutes(cfg *config.Config, marketplaceService *marketplace.Service) *http.Server {
@@ -89,6 +107,13 @@ func InitRoutes(cfg *config.Config, marketplaceService *marketplace.Service) *ht
 
 	// Collections
 	v1Router.Handle("/users/{userId}/collections", alice.New(httpin.NewInput(createCollectionRequest{})).ThenFunc(h.createCollection)).Methods(http.MethodPost)
+
+	// List/Unlist items
+	v1Router.Handle("/users/{userId}/collections/{collectionId}/items/{itemId}/list", alice.New(httpin.NewInput(listItemsRequest{})).ThenFunc(h.listItems)).Methods(http.MethodPost)
+	v1Router.Handle("/users/{userId}/collections/{collectionId}/items/{itemId}/unlist", alice.New(httpin.NewInput(listItemsRequest{})).ThenFunc(h.unlistItems)).Methods(http.MethodPost)
+
+	// Get listed items
+	v1Router.Handle("/listings", alice.New(httpin.NewInput(getListingsRequest{})).ThenFunc(h.getListings)).Methods(http.MethodPost)
 
 	return &http.Server{
 		Addr:    ":" + cfg.Profile.Port,
