@@ -34,6 +34,11 @@ type (
 		UserID uuid.UUID `in:"path=userId"`
 	}
 
+	createCollectionRequest struct {
+		UserID uuid.UUID             `in:"path=userId"`
+		Body   createCollectionInput `in:"body=json"`
+	}
+
 	registerUserInput struct {
 		Email    string `json:"email" validate:"notblank"`
 		Username string `json:"username" validate:"notblank"`
@@ -43,6 +48,27 @@ type (
 	loginUserInput struct {
 		Email    string `json:"email" validate:"notblank"`
 		Password string `json:"password" validate:"notblank"`
+	}
+
+	createCollectionInput struct {
+		Name          string       `json:"name" validate:"notblank"`
+		Description   string       `json:"description"`
+		BaseImagePath string       `json:"base_image_path"`
+		ImageID       string       `json:"image_id"`
+		Address       string       `json:"address"`
+		NetworkID     string       `json:"network_id"`
+		ChainID       string       `json:"chain_id"`
+		Items         []itemsInput `json:"items"`
+	}
+
+	itemsInput struct {
+		Name         string         `json:"name" validate:"notblank"`
+		Description  string         `json:"description"`
+		ImageID      string         `json:"image_id"`
+		FiatPrice    float64        `json:"fiat_price"`
+		TotalAmount  int64          `json:"total_amount"`
+		ListedAmount int64          `json:"listed_amount"`
+		Attributes   map[string]any `json:"attributes"`
 	}
 )
 
@@ -61,6 +87,9 @@ func InitRoutes(cfg *config.Config, marketplaceService *marketplace.Service) *ht
 	v1Router.Handle("/users/{email}", alice.New(httpin.NewInput(getUserByEmailRequest{})).ThenFunc(h.getUserByEmail)).Methods(http.MethodGet)
 	v1Router.Handle("/users/{userId}", alice.New(httpin.NewInput(updateUserRequest{})).ThenFunc(h.updateUser)).Methods(http.MethodPut)
 	v1Router.Handle("/users/{userId}", alice.New(httpin.NewInput(deleteUserRequest{})).ThenFunc(h.deleteUser)).Methods(http.MethodDelete)
+
+	// Collections
+	v1Router.Handle("/users/{userId}/collections", alice.New(httpin.NewInput(createCollectionRequest{})).ThenFunc(h.createCollection)).Methods(http.MethodPost)
 
 	return &http.Server{
 		Addr:    ":" + cfg.Profile.Port,

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/common/response"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/common/router"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace"
@@ -15,6 +16,61 @@ type (
 		service *marketplace.Service
 	}
 )
+
+func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Request) {
+	request, err := router.ParseInput[createCollectionRequest](r.Context())
+	if err != nil {
+		response.BadRequest(w, err)
+		return
+	}
+
+	if len(request.Body.Items) == 0 {
+		response.BadRequest(w, errors.New("no items provided"))
+	}
+
+	collectionID := uuid.New()
+
+	items := make([]*model.Item, 0, len(request.Body.Items))
+
+	for _, item := range request.Body.Items {
+		items = append(items, &model.Item{
+			ID:           uuid.New(),
+			CollectionID: collectionID,
+			Name:         item.Name,
+			Description:  item.Description,
+			ImageID:      item.ImageID,
+			FiatPrice:    item.FiatPrice,
+			TotalAmount:  item.TotalAmount,
+			ListedAmount: item.ListedAmount,
+			Attributes:   item.Attributes,
+			CreatedAt:    time.Now().UTC(),
+		})
+	}
+
+	collection := &model.Collection{
+		ID:            collectionID,
+		UserID:        request.UserID,
+		Name:          request.Body.Name,
+		Description:   request.Body.Description,
+		BaseImagePath: request.Body.BaseImagePath,
+		ImageID:       request.Body.ImageID,
+		Address:       request.Body.Address,
+		NetworkID:     request.Body.NetworkID,
+		ChainID:       request.Body.ChainID,
+		Items:         items,
+		CreatedAt:     time.Now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
+	}
+
+	result, err := h.service.CreateCollection(r.Context(), collection)
+	if err != nil {
+		response.InternalServerError(w, err)
+		return
+	}
+
+	response.Ok(w, result)
+	return
+}
 
 func (h *marketplaceHandler) registerUser(w http.ResponseWriter, r *http.Request) {
 	request, err := router.ParseInput[registerUserRequest](r.Context())
