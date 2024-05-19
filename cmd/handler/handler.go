@@ -27,40 +27,78 @@ func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Req
 
 	if len(request.Body.Items) == 0 {
 		response.BadRequest(w, errors.New("no items provided"))
+		return
 	}
 
 	items := make([]*model.Item, 0, len(request.Body.Items))
 
 	for _, item := range request.Body.Items {
+
+		if item.ListedAmount > item.TotalAmount {
+			response.BadRequest(w, errors.New("listed amount cannot be greater than total amount"))
+			return
+		}
+
 		items = append(items, &model.Item{
 			Name:         item.Name,
 			Description:  item.Description,
 			ImageID:      item.ImageID,
 			FiatPrice:    item.FiatPrice,
 			TotalAmount:  item.TotalAmount,
-			ListedAmount: 0,
+			ListedAmount: item.ListedAmount,
 			Attributes:   item.Attributes,
 			CreatedAt:    time.Now().UTC(),
 		})
 	}
 
 	collection := &model.Collection{
-		UserID:        request.UserID,
-		Name:          request.Body.Name,
-		Description:   request.Body.Description,
-		BaseImagePath: request.Body.BaseImagePath,
-		ImageID:       request.Body.ImageID,
-		NetworkID:     request.Body.NetworkID,
-		ChainID:       request.Body.ChainID,
-		Status:        model.NotDeployedStatus,
-		Items:         items,
-		CreatedAt:     time.Now().UTC(),
-		UpdatedAt:     time.Now().UTC(),
+		OwnerAddressHex: request.Body.OwnerAddressHex,
+		Name:            request.Body.Name,
+		Description:     request.Body.Description,
+		BaseHash:        request.Body.BaseHash,
+		NetworkID:       request.Body.NetworkID,
+		ChainID:         request.Body.ChainID,
+		Status:          model.NotDeployedStatus,
+		Items:           items,
+		CreatedAt:       time.Now().UTC(),
+		UpdatedAt:       time.Now().UTC(),
 	}
 
-	// TODO: Do I need to deploy marketplace contract or will I receive the address?
+	result, err := h.service.CreateCollection(r.Context(), collection)
+	if err != nil {
+		response.InternalServerError(w, err)
+		return
+	}
 
-	result, err := h.service.CreateCollection(r.Context(), collection, request.Body.ChainID, request.Body.MarketplaceAddressHex)
+	response.Ok(w, result)
+	return
+}
+
+func (h *marketplaceHandler) getCollection(w http.ResponseWriter, r *http.Request) {
+	request, err := router.ParseInput[getCollectionRequest](r.Context())
+	if err != nil {
+		response.BadRequest(w, err)
+		return
+	}
+
+	result, err := h.service.GetCollection(r.Context(), request.CollectionID)
+	if err != nil {
+		response.InternalServerError(w, err)
+		return
+	}
+
+	response.Ok(w, result)
+	return
+}
+
+func (h *marketplaceHandler) getUserCollections(w http.ResponseWriter, r *http.Request) {
+	request, err := router.ParseInput[getCollectionRequest](r.Context())
+	if err != nil {
+		response.BadRequest(w, err)
+		return
+	}
+
+	result, err := h.service.GetUserCollections(r.Context(), request.UserAddress)
 	if err != nil {
 		response.InternalServerError(w, err)
 		return
@@ -122,6 +160,28 @@ func (h *marketplaceHandler) getListings(w http.ResponseWriter, r *http.Request)
 	}
 
 	result, err := h.service.GetListings(r.Context(), request.CollectionID)
+	if err != nil {
+		response.InternalServerError(w, err)
+		return
+	}
+
+	response.Ok(w, result)
+	return
+}
+
+func (h *marketplaceHandler) buyItems(w http.ResponseWriter, r *http.Request) {
+	request, err := router.ParseInput[buyItemsRequest](r.Context())
+	if err != nil {
+		response.BadRequest(w, err)
+		return
+	}
+
+	if request.Body.Amount <= 0 {
+		response.BadRequest(w, errs.ErrInvalidRequest)
+		return
+	}
+
+	result, err := h.service.BuyItems(r.Context(), request.CollectionID, request.ItemID, request.Body.Amount, request.Body.FromAddress, request.Body.ToAddress)
 	if err != nil {
 		response.InternalServerError(w, err)
 		return

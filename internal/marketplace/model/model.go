@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"time"
@@ -23,20 +22,19 @@ type (
 	Collection struct {
 		bun.BaseModel `bun:"table:collections"`
 
-		ID            int64      `bun:"id,pk,autoincrement" json:"id"`
-		UserID        uuid.UUID  `bun:"user_id,notnull" json:"user_id"`
-		Name          string     `bun:"name" json:"name"`
-		Description   string     `bun:"description" json:"description"`
-		BaseImagePath string     `bun:"base_image_path" json:"base_image_path"`
-		ImageID       string     `bun:"image_id" json:"image_id"`
-		Address       string     `bun:"address" json:"address"`
-		NetworkID     string     `bun:"network_id,notnull" json:"network_id"`
-		ChainID       int64      `bun:"chain_id,notnull" json:"chain_id"`
-		Items         []*Item    `bun:"rel:has-many,join:id=collection_id" json:"items"`
-		Status        string     `bun:"status,notnull" json:"status"`
-		CreatedAt     time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
-		UpdatedAt     time.Time  `bun:"updated_at,default:current_timestamp" json:"updated_at"`
-		DeletedAt     *time.Time `bun:"deleted_at,soft_delete" json:"-"`
+		ID              int64      `bun:"id,pk,autoincrement" json:"id"`
+		OwnerAddressHex string     `bun:"owner_address_hex,notnull" json:"owner_address_hex"`
+		Name            string     `bun:"name" json:"name"`
+		Description     string     `bun:"description" json:"description"`
+		BaseHash        string     `bun:"base_hash" json:"base_hash"`
+		Address         string     `bun:"address" json:"address"`
+		NetworkID       string     `bun:"network_id,notnull" json:"network_id"`
+		ChainID         int64      `bun:"chain_id,notnull" json:"chain_id"`
+		Items           []*Item    `bun:"rel:has-many,join:id=collection_id" json:"items"`
+		Status          string     `bun:"status,notnull" json:"status"`
+		CreatedAt       time.Time  `bun:"created_at,default:current_timestamp" json:"created_at"`
+		UpdatedAt       time.Time  `bun:"updated_at,default:current_timestamp" json:"updated_at"`
+		DeletedAt       *time.Time `bun:"deleted_at,soft_delete" json:"-"`
 	}
 
 	Item struct {
@@ -61,7 +59,3 @@ const (
 	PendingTXStatus   = "PENDING_TX"
 	DeployedStatus    = "DEPLOYED"
 )
-
-func (c *Collection) GetImageURL() string {
-	return fmt.Sprintf("%s/%s", c.BaseImagePath, c.ImageID)
-}
