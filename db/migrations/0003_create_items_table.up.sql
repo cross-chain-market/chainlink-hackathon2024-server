@@ -3,8 +3,8 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    collection_id UUID NOT NULL,
+    id  BIGSERIAL PRIMARY KEY,
+    collection_id BIGSERIAL NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     image_id TEXT,

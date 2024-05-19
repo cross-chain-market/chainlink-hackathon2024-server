@@ -3,7 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS collections (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id  BIGSERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS collections (
     image_id TEXT,
     address TEXT,
     network_id TEXT NOT NULL,
-    chain_id TEXT NOT NULL,
+    chain_id BIGINT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ,
