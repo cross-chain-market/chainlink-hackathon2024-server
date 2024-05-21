@@ -49,6 +49,106 @@ func (r *PostgresRepository) createCollection(ctx context.Context, collection *m
 	return collection, nil
 }
 
+func (r *PostgresRepository) getCollection(ctx context.Context, collectionID int64) (*model.Collection, error) {
+	collection := new(model.Collection)
+
+	err := r.db.NewSelect().
+		Model(collection).
+		Relation("Items").
+		Where("id = ?", collectionID).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.ErrEntityNotFound
+		}
+
+		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+
+	return collection, nil
+}
+
+func (r *PostgresRepository) getCollectionByNameAndOwnerAddress(ctx context.Context, collectionName, ownerAddressHex string) (*model.Collection, error) {
+	collection := new(model.Collection)
+
+	err := r.db.NewSelect().
+		Model(collection).
+		Relation("Items").
+		Where("name = ?", collectionName).
+		Where("owner_address_hex = ?", ownerAddressHex).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errs.ErrEntityNotFound
+		}
+
+		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+
+	return collection, nil
+}
+
+func (r *PostgresRepository) processCollectionDeployed(ctx context.Context, collectionName, collectionAddress, ownerAddressHex string) error {
+	if err := r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		collection := new(model.Collection)
+
+		err := tx.NewSelect().
+			Model(collection).
+			Where("name = ?", collectionName).
+			Where("owner_address_hex = ?", ownerAddressHex).
+			Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errs.ErrEntityNotFound
+			}
+
+			return fmt.Errorf("failed to get collection: %w", err)
+		}
+
+		collection.Address = collectionAddress
+		collection.Status = model.DeployedStatus
+
+		res, err := tx.NewUpdate().Model(collection).
+			ExcludeColumn("created_at").
+			WherePK().
+			Returning("*").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("error getting rows affected: %w", err)
+		}
+
+		if rowsAffected == 0 {
+			return errs.ErrEntityNotFound
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to run in transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) getUserCollections(ctx context.Context, ownerAddressHex string) ([]*model.Collection, error) {
+	var collections []*model.Collection
+
+	err := r.db.NewSelect().
+		Model(&collections).
+		Relation("Items").
+		Where("owner_address_hex = ?", ownerAddressHex).
+		Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user collections: %w", err)
+	}
+
+	return collections, nil
+}
+
 func (r *PostgresRepository) updateCollection(ctx context.Context, collection *model.Collection) error {
 	res, err := r.db.NewUpdate().Model(collection).
 		ExcludeColumn("created_at").
@@ -172,7 +272,79 @@ func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int6
 		return nil, fmt.Errorf("failed to fetch listings: %w", err)
 	}
 
-	return items, nil
+	// TODO: Improve
+	result := make([]*model.Item, 0, len(items))
+	deployedCollections := make(map[int64]bool)
+	for _, item := range items {
+		isDeployed, exists := deployedCollections[item.CollectionID]
+		if exists {
+			if isDeployed {
+				result = append(result, item)
+			}
+
+			continue
+		}
+
+		ok, err := r.db.NewSelect().
+			Model((*model.Collection)(nil)).
+			Where("id = ?", item.CollectionID).
+			Where("status = ?", model.DeployedStatus).
+			Exists(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check collection status: %w", err)
+		}
+
+		if ok {
+			result = append(result, item)
+			deployedCollections[item.CollectionID] = true
+		} else {
+			deployedCollections[item.CollectionID] = false
+		}
+	}
+
+	return result, nil
+}
+
+func (r *PostgresRepository) buyItems(ctx context.Context, collectionID, itemID, amount int64, fromAddress, toAddress string) (*model.Item, error) {
+	item := new(model.Item)
+
+	if err := r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		err := tx.NewSelect().
+			Model(item).
+			Where("id = ?", itemID).
+			Where("collection_id = ?", collectionID).
+			Scan(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return errs.ErrEntityNotFound
+			}
+
+			return fmt.Errorf("failed to get item: %w", err)
+		}
+
+		// check if amount is valid
+		if amount > item.ListedAmount || amount > item.TotalAmount {
+			return errs.ErrCannotBuyMoreThanListedAmount
+		}
+
+		item.ListedAmount -= amount
+		item.TotalAmount -= amount
+
+		_, err = tx.NewUpdate().Model(item).
+			ExcludeColumn("created_at").
+			WherePK().
+			Returning("*").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("failed to buy items: %w", err)
+	}
+
+	return item, nil
 }
 
 func (r *PostgresRepository) registerUser(ctx context.Context, user *model.User) (*model.User, error) {

@@ -10,4 +10,5 @@ var (
 	ErrListedAmountGreaterThanTotalAmount        = errors.New("listed amount greater than total amount")
 	ErrCannotUpdateFiatPrice                     = errors.New("cannot update fiat price")
 	ErrCannotUnlistGreaterAmountThanListedAmount = errors.New("cannot unlist amount greater than listed amount")
+	ErrCannotBuyMoreThanListedAmount             = errors.New("cannot buy more than listed amount")
 )

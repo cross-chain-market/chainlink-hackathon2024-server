@@ -3,39 +3,42 @@ package marketplace
 import (
 	"context"
 	"fmt"
-	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace/blockchain"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace/model"
+	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repo      *PostgresRepository
-	ethClient *blockchain.ETHClient
+	repo *PostgresRepository
 }
 
-func NewService(repo *PostgresRepository, ethClient *blockchain.ETHClient) *Service {
-	return &Service{repo: repo, ethClient: ethClient}
+func NewService(repo *PostgresRepository) *Service {
+	return &Service{repo: repo}
 }
 
-func (s *Service) CreateCollection(ctx context.Context, collection *model.Collection, chainID int64, marketplaceAccountHex string) (*model.Collection, error) {
+func (s *Service) CreateCollection(ctx context.Context, collection *model.Collection) (*model.Collection, error) {
 	collection, err := s.repo.createCollection(ctx, collection)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db collection: %w", err)
 	}
 
-	contractAddressHex, err := s.ethClient.CreateCollection(ctx, collection, chainID, marketplaceAccountHex)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create blockchain collection: %w", err)
-	}
-
-	collection.Status = model.PendingTXStatus
-	collection.Address = contractAddressHex
-
-	if err := s.repo.updateCollection(ctx, collection); err != nil {
-		return nil, fmt.Errorf("failed to update db collection: %w", err)
-	}
-
 	return collection, nil
+}
+
+func (s *Service) GetCollection(ctx context.Context, collectionID int64) (*model.Collection, error) {
+	return s.repo.getCollection(ctx, collectionID)
+}
+
+func (s *Service) GetCollectionByNameAndOwnerAddress(ctx context.Context, collectionName, ownerAddressHes string) (*model.Collection, error) {
+	return s.repo.getCollectionByNameAndOwnerAddress(ctx, collectionName, ownerAddressHes)
+}
+
+func (s *Service) GetUserCollections(ctx context.Context, ownerAddressHex string) ([]*model.Collection, error) {
+	return s.repo.getUserCollections(ctx, ownerAddressHex)
+}
+
+func (s *Service) ProcessCollectionDeployed(ctx context.Context, collectionName string, collectionAddress, ownerAddress common.Address) error {
+	return s.repo.processCollectionDeployed(ctx, collectionName, collectionAddress.Hex(), ownerAddress.Hex())
 }
 
 func (s *Service) ListItem(ctx context.Context, collectionID, itemID, listedAmount int64, fiatPrice float64) (*model.Item, error) {
@@ -58,6 +61,10 @@ func (s *Service) UnlistItem(ctx context.Context, collectionID, itemID, listedAm
 
 func (s *Service) GetListings(ctx context.Context, collectionID *int64) ([]*model.Item, error) {
 	return s.repo.getListings(ctx, collectionID)
+}
+
+func (s *Service) BuyItems(ctx context.Context, collectionID, itemID, amount int64, fromAddress, toAddress string) (*model.Item, error) {
+	return s.repo.buyItems(ctx, collectionID, itemID, amount, fromAddress, toAddress)
 }
 
 func (s *Service) RegisterUser(ctx context.Context, user *model.User) (*model.User, error) {

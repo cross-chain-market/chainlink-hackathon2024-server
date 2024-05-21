@@ -15,9 +15,10 @@ import (
 
 type (
 	Config struct {
-		Profile  Profile
-		Logger   Logger
-		Postgres Postgres
+		Profile     Profile
+		Logger      Logger
+		Postgres    Postgres
+		Marketplace Marketplace
 	}
 
 	Postgres struct {
@@ -45,6 +46,17 @@ type (
 		Debug     bool
 		Pretty    bool
 		AddSource bool
+	}
+
+	Marketplace struct {
+		Clients map[int64]Client
+	}
+
+	Client struct {
+		Enabled                  bool
+		HttpURL                  string
+		WssURL                   string
+		CollectionFactoryAddress string
 	}
 )
 

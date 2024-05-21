@@ -13,3 +13,15 @@ postgres:
   insecure: true
   queryHook: false
   readTimeout: 60s
+marketplace:
+  clients:
+    80002: # Porygon Amoy
+      enabled: false
+      httpUrl: "https://green-lively-isle.matic-amoy.quiknode.pro/e4f9eb77b0f4d85f8bd86b1f9a13e0f7a2d3e16e/"
+      wssUrl: "wss://green-lively-isle.matic-amoy.quiknode.pro/e4f9eb77b0f4d85f8bd86b1f9a13e0f7a2d3e16e/"
+      collectionFactoryAddress: "TODO"
+    43113: # Avalanche Testnet
+      enabled: false
+      httpUrl: "https://patient-late-frost.avalanche-testnet.quiknode.pro/af4ff48c50b08a7fd7f9d595b6ea6c677ae1394b/ext/bc/C/rpc/"
+      wssUrl: "wss://patient-late-frost.avalanche-testnet.quiknode.pro/af4ff48c50b08a7fd7f9d595b6ea6c677ae1394b/ext/bc/C/rpc/"
+      collectionFactoryAddress: "TODO"
