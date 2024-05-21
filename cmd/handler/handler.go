@@ -52,7 +52,7 @@ func (h *marketplaceHandler) createCollection(w http.ResponseWriter, r *http.Req
 	}
 
 	collection := &model.Collection{
-		OwnerAddressHex: request.Body.OwnerAddressHex,
+		OwnerAddressHex: request.UserAddress,
 		Name:            request.Body.Name,
 		Description:     request.Body.Description,
 		BaseHash:        request.Body.BaseHash,

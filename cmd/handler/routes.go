@@ -35,7 +35,8 @@ type (
 	}
 
 	createCollectionRequest struct {
-		Body createCollectionInput `in:"body=json"`
+		UserAddress string                `in:"path=userAddress"`
+		Body        createCollectionInput `in:"body=json"`
 	}
 
 	getCollectionRequest struct {
@@ -73,13 +74,12 @@ type (
 	}
 
 	createCollectionInput struct {
-		Name            string       `json:"name" validate:"notblank"`
-		Description     string       `json:"description"`
-		BaseHash        string       `json:"base_hash"`
-		OwnerAddressHex string       `json:"owner_address_hex"`
-		NetworkID       string       `json:"network_id"`
-		ChainID         int64        `json:"chain_id"`
-		Items           []itemsInput `json:"items"`
+		Name        string       `json:"name" validate:"notblank"`
+		Description string       `json:"description"`
+		BaseHash    string       `json:"base_hash"`
+		NetworkID   string       `json:"network_id"`
+		ChainID     int64        `json:"chain_id"`
+		Items       []itemsInput `json:"items"`
 	}
 
 	itemsInput struct {
@@ -121,7 +121,7 @@ func InitRoutes(cfg *config.Config, marketplaceService *marketplace.Service) *ht
 	v1Router.Handle("/users/{userId}", alice.New(httpin.NewInput(deleteUserRequest{})).ThenFunc(h.deleteUser)).Methods(http.MethodDelete)
 
 	// Collections
-	v1Router.Handle("/collections", alice.New(httpin.NewInput(createCollectionRequest{})).ThenFunc(h.createCollection)).Methods(http.MethodPost)
+	v1Router.Handle("/users/{userAddress}/collections", alice.New(httpin.NewInput(createCollectionRequest{})).ThenFunc(h.createCollection)).Methods(http.MethodPost)
 	v1Router.Handle("/users/{userAddress}/collections", alice.New(httpin.NewInput(getCollectionRequest{})).ThenFunc(h.getUserCollections)).Methods(http.MethodGet)
 	v1Router.Handle("/users/{userAddress}/collections/{collectionId}", alice.New(httpin.NewInput(getCollectionRequest{})).ThenFunc(h.getCollection)).Methods(http.MethodGet)
 
@@ -130,7 +130,7 @@ func InitRoutes(cfg *config.Config, marketplaceService *marketplace.Service) *ht
 	v1Router.Handle("/collections/{collectionId}/items/{itemId}/unlist", alice.New(httpin.NewInput(listItemsRequest{})).ThenFunc(h.unlistItems)).Methods(http.MethodPost)
 
 	// Get listed items
-	v1Router.Handle("/listings", alice.New(httpin.NewInput(getListingsRequest{})).ThenFunc(h.getListings)).Methods(http.MethodPost)
+	v1Router.Handle("/listings", alice.New(httpin.NewInput(getListingsRequest{})).ThenFunc(h.getListings)).Methods(http.MethodGet)
 
 	// Buy listed items
 	v1Router.Handle("/collections/{collectionId}/items/{itemId}/buy", alice.New(httpin.NewInput(buyItemsRequest{})).ThenFunc(h.buyItems)).Methods(http.MethodPost)
