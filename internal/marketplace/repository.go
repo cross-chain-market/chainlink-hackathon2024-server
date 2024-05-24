@@ -272,38 +272,15 @@ func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int6
 		return nil, fmt.Errorf("failed to fetch listings: %w", err)
 	}
 
-	/*
-		// TODO: Improve
-		result := make([]*model.Item, 0, len(items))
-		deployedCollections := make(map[int64]bool)
-		for _, item := range items {
-			isDeployed, exists := deployedCollections[item.CollectionID]
-			if exists {
-				if isDeployed {
-					result = append(result, item)
-				}
-
-				continue
-			}
-
-			ok, err := r.db.NewSelect().
-				Model((*model.Collection)(nil)).
-				Where("id = ?", item.CollectionID).
-				Where("status = ?", model.DeployedStatus).
-				Exists(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("failed to check collection status: %w", err)
-			}
-
-			if ok {
-				result = append(result, item)
-				deployedCollections[item.CollectionID] = true
-			} else {
-				deployedCollections[item.CollectionID] = false
-			}
+	// TODO: Improve
+	for i := range items {
+		collection, err := r.getCollection(ctx, items[i].CollectionID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get item collection: %w", err)
 		}
 
-	*/
+		items[i].NetworkID = &collection.NetworkID
+	}
 
 	return items, nil
 }

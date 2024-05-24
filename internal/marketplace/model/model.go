@@ -51,6 +51,7 @@ type (
 		Attributes   map[string]any `bun:"attributes" json:"attributes"`
 		CreatedAt    time.Time      `bun:"created_at,default:current_timestamp" json:"created_at"`
 		DeletedAt    *time.Time     `bun:"deleted_at,soft_delete" json:"-"`
+		NetworkID    *string        `bun:"-" json:"network_id,omitempty"`
 	}
 )
 
