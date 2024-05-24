@@ -272,37 +272,40 @@ func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int6
 		return nil, fmt.Errorf("failed to fetch listings: %w", err)
 	}
 
-	// TODO: Improve
-	result := make([]*model.Item, 0, len(items))
-	deployedCollections := make(map[int64]bool)
-	for _, item := range items {
-		isDeployed, exists := deployedCollections[item.CollectionID]
-		if exists {
-			if isDeployed {
-				result = append(result, item)
+	/*
+		// TODO: Improve
+		result := make([]*model.Item, 0, len(items))
+		deployedCollections := make(map[int64]bool)
+		for _, item := range items {
+			isDeployed, exists := deployedCollections[item.CollectionID]
+			if exists {
+				if isDeployed {
+					result = append(result, item)
+				}
+
+				continue
 			}
 
-			continue
+			ok, err := r.db.NewSelect().
+				Model((*model.Collection)(nil)).
+				Where("id = ?", item.CollectionID).
+				Where("status = ?", model.DeployedStatus).
+				Exists(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check collection status: %w", err)
+			}
+
+			if ok {
+				result = append(result, item)
+				deployedCollections[item.CollectionID] = true
+			} else {
+				deployedCollections[item.CollectionID] = false
+			}
 		}
 
-		ok, err := r.db.NewSelect().
-			Model((*model.Collection)(nil)).
-			Where("id = ?", item.CollectionID).
-			Where("status = ?", model.DeployedStatus).
-			Exists(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to check collection status: %w", err)
-		}
+	*/
 
-		if ok {
-			result = append(result, item)
-			deployedCollections[item.CollectionID] = true
-		} else {
-			deployedCollections[item.CollectionID] = false
-		}
-	}
-
-	return result, nil
+	return items, nil
 }
 
 func (r *PostgresRepository) buyItems(ctx context.Context, collectionID, itemID, amount int64, fromAddress, toAddress string) (*model.Item, error) {
