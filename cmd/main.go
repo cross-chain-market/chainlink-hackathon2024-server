@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/cmd/handler"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/blockchain"
-	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/common/envhelper"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/common/httpin"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/common/validator"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/config"
@@ -62,16 +61,6 @@ func main() {
 	}
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, opts)))
-
-	// initializing eth client
-	ethGateway := envhelper.GetEnv("GATEWAY")
-
-	client, err := ethclient.Dial(ethGateway)
-	if err != nil {
-		slog.Error("failed to connect to Ethereum gateway", slog.String("eth_gateway", ethGateway), slog.String("error", err.Error()))
-		os.Exit(1)
-	}
-	defer client.Close()
 
 	// initializing marketplace Service
 	marketplaceService := marketplace.NewService(marketplace.NewPostgresRepository(postgres.New(&cfg.Postgres)))
