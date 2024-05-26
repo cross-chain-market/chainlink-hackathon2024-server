@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
 	errs "github.com/cross-chain-market/chainlink-hackathon2024-server/internal/errors"
 	"github.com/cross-chain-market/chainlink-hackathon2024-server/internal/marketplace/model"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 type PostgresRepository struct {
@@ -283,6 +284,7 @@ func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int6
 
 		if collection.Status == model.DeployedStatus {
 			item.NetworkID = &collection.NetworkID
+			item.ChainID = &collection.ChainID
 			result = append(result, item)
 		}
 	}
