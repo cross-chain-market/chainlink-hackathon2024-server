@@ -1,9 +1,10 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
-	"time"
 )
 
 type (
@@ -52,6 +53,7 @@ type (
 		CreatedAt    time.Time      `bun:"created_at,default:current_timestamp" json:"created_at"`
 		DeletedAt    *time.Time     `bun:"deleted_at,soft_delete" json:"-"`
 		NetworkID    *string        `bun:"-" json:"network_id,omitempty"`
+		ChainID      *int64         `bun:"-" json:"chain_id,omitempty"`
 	}
 )
 
