@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS items (
     collection_id BIGSERIAL NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    image_id TEXT,
+    image_id BIGINT,
     fiat_price DECIMAL,
     total_amount BIGINT,
     listed_amount BIGINT,
