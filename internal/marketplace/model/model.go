@@ -44,7 +44,7 @@ type (
 		CollectionID int64          `bun:"collection_id,notnull" json:"collection_id"`
 		Name         string         `bun:"name" json:"name"`
 		Description  string         `bun:"description" json:"description"`
-		ImageID      string         `bun:"image_id" json:"image_id"`
+		ImageID      int64          `bun:"image_id" json:"image_id"`
 		FiatPrice    float64        `bun:"fiat_price" json:"fiat_price"`
 		TotalAmount  int64          `bun:"total_amount" json:"total_amount"`
 		ListedAmount int64          `bun:"listed_amount" json:"listed_amount"`

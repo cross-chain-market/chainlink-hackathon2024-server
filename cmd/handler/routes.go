@@ -85,7 +85,7 @@ type (
 	itemsInput struct {
 		Name         string         `json:"name" validate:"notblank"`
 		Description  string         `json:"description"`
-		ImageID      string         `json:"image_id"`
+		ImageID      int64          `json:"image_id"`
 		FiatPrice    float64        `json:"fiat_price"`
 		TotalAmount  int64          `json:"total_amount"`
 		ListedAmount int64          `json:"listed_amount"`
