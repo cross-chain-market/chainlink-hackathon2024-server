@@ -19,9 +19,24 @@ marketplace:
       enabled: false
       httpUrl: "https://green-lively-isle.matic-amoy.quiknode.pro/e4f9eb77b0f4d85f8bd86b1f9a13e0f7a2d3e16e/"
       wssUrl: "wss://green-lively-isle.matic-amoy.quiknode.pro/e4f9eb77b0f4d85f8bd86b1f9a13e0f7a2d3e16e/"
-      collectionFactoryAddress: "TODO"
+      collectionFactoryAddress: "0xd0D05446a76be24713dF2F383CfdcAae66A8bf6B"
     43113: # Avalanche Testnet
       enabled: true
       httpUrl: "https://patient-late-frost.avalanche-testnet.quiknode.pro/af4ff48c50b08a7fd7f9d595b6ea6c677ae1394b/ext/bc/C/rpc/"
       wssUrl: "wss://patient-late-frost.avalanche-testnet.quiknode.pro/af4ff48c50b08a7fd7f9d595b6ea6c677ae1394b/ext/bc/C/ws/"
       collectionFactoryAddress: "0x43871555C9291B89E8B3906285047eA59Eb39A92"
+    11155420: # Optimism Sepolia
+      enabled: false
+      httpUrl: "https://tame-omniscient-grass.optimism-sepolia.quiknode.pro/"
+      wssUrl: "wss://tame-omniscient-grass.optimism-sepolia.quiknode.pro/"
+      collectionFactoryAddress: "TODO"
+    421614: # Arbitrum Sepolia
+      enabled: false
+      httpUrl: "https://quiet-wild-sheet.arbitrum-sepolia.quiknode.pro/"
+      wssUrl: "wss://quiet-wild-sheet.arbitrum-sepolia.quiknode.pro/"
+      collectionFactoryAddress: "TODO"
+    11155111: # Ethereum Sepolia
+      enabled: false
+      httpUrl: "https://still-dark-night.ethereum-sepolia.quiknode.pro/ "
+      wssUrl: "wss://still-dark-night.ethereum-sepolia.quiknode.pro/"
+      collectionFactoryAddress: "TODO"
