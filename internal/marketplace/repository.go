@@ -285,6 +285,8 @@ func (r *PostgresRepository) getListings(ctx context.Context, collectionID *int6
 		if collection.Status == model.DeployedStatus {
 			item.NetworkID = &collection.NetworkID
 			item.ChainID = &collection.ChainID
+			item.BaseHash = &collection.BaseHash
+			item.CollectionAddress = &collection.Address
 			result = append(result, item)
 		}
 	}
